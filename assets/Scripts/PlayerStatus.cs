@@ -17,7 +17,7 @@ public class PlayerStatus : MonoBehaviour {
 	public static bool paused = false;
 
 	public static float income; //Monthly income
-	public static float carbonDue; //Current player carbon savings
+	//public static float carbonDue; //Current player carbon savings
 	public MonthTimer monthTimer;
     public GameObject townSmog;
 
@@ -41,34 +41,24 @@ public class PlayerStatus : MonoBehaviour {
     }
 
 	void Start () {
-        //Starting Stats
-		level = 1;
-		pikas = 2;
-		money = 20000;
-        carbon = 0;
-		unlockPoints = 2;
-
         UpdateSmog();
-        /* Preliminary attempt at save/load system
+        
+        // Preliminary attempt at save/load system
 		if (PlayerPrefs.HasKey("MONEY")) { //checks for player info
-			//Used for continuing a previous game
-			//money = PlayerPrefs.GetFloat("MONEY");
-			//carbon = PlayerPrefs.GetFloat("CARBON");
-			Debug.Log("Money loaded from Prefs");
+            //Used for continuing a previous game
+            GameMgmt.LoadPreviousGame();
 		} else {
-			//Used to start new game
-		    money = 0;
-			carbon = 0;
-			SaveInfo.SaveAll();
-			Debug.Log ("Money and Carbon set to 0");
-		} */
+            //Used to start new game
+            GameMgmt.StartNewGame();
+		} 
 	}
 
 	// Update is called once per frame
 	void Update () {
-		if (monthTimer.timeMeter.value <= 0) 
+        townSmog.transform.Translate(Vector3.right * 10 * Time.deltaTime);
+
+        if (monthTimer.timeMeter.value <= 0) 
 			money += income;
-		
 
 		if (!paused) {
 			for (int i = taskMeters.Count - 1; i >= 0; i--) {	                    //Advances all of the active upgrade task meters.					
@@ -218,7 +208,7 @@ public class PlayerStatus : MonoBehaviour {
         float smogOpacity = 1.2f - (carbon / UpgradeDatabase.levels[2]);
         Debug.Log("Smog opacity: " + smogOpacity);
 
-        Material smogMaterial = townSmog.GetComponent<Renderer>().material;
+        Material smogMaterial = townSmog.transform.GetChild(0).gameObject.GetComponent<Renderer>().material;
         Color smogColor = smogMaterial.color;
         smogColor.a = smogOpacity;
         smogMaterial.color = smogColor;

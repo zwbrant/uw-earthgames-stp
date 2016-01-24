@@ -21,17 +21,21 @@ public class BuildingMenu : MonoBehaviour {
 	public GameObject popupPrefab;
     public GameObject solarPanelPrefab;
     public List<GameObject> solarPanels = null;
-	public string buildName;
-
+    public string buildName;
 
     public float initCarbon = 0;
     public float initIncome = 0;
     public float carbon = 0;
 	public float income = 0;
 
+    void Awake()
+    {
+        BuildingDatabase.buildings.Add(this);
+    }
+
+
     void Start()
     {
-        
         AnalyzeBuild();
         initCarbon = carbon;
         initIncome = income;

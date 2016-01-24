@@ -3,15 +3,19 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class BuildingDatabase : MonoBehaviour {
-    public static List<GameObject> buildings;
+    public static List<BuildingMenu> buildings = new List<BuildingMenu>();
 
 	// Use this for initialization
 	void Start () {
-        buildings = new List<GameObject>(GameObject.FindGameObjectsWithTag("Building")); 
+        for (int i = 0; i < buildings.Count; i++)
+        {
+            Debug.Log(buildings[i].name);
+        }
+
 	}
 	
 	// Update is called once per frame
 	void Update () {
-	
+	    
 	}
 }

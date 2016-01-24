@@ -55,10 +55,8 @@ public class UpgradeTree : MonoBehaviour {
 		if (!unlocked) {
 			Image branchImage = currBranch.gameObject.GetComponent<Image> ();
 			branchImage.sprite = Resources.Load<Sprite>("Menu Elements/lockedBranch");
-		} else
-        {
-            Debug.Log("Salmon");
-        }
+		} 
+
 		currBranch.transform.SetParent(currItem.transform);
 		currBranch.transform.SetSiblingIndex(0);
 		if (nodeIndex == 0) {

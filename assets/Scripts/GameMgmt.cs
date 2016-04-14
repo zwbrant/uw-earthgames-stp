@@ -3,14 +3,21 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class GameMgmt : MonoBehaviour {
+    public static PlayerStatus status;
 
     //New game starting stats
     public const float initCarbon = 0;
-    public const float initMoney = 20000;
+    public const float initMoney = 50000;
     public const float initIncome = 0;
-    public const int initPikas = 2;
-    public const int initLevel = 1;
-    public const int initUnlockPoints = 2;
+    public const int initPikas = 3;
+    public const int initLevel = 6;
+    public const int initUnlockPoints = 4;
+
+
+    void Awake ()
+    {
+        status = this.GetComponent<PlayerStatus>();
+    }
 
     public void QuitGame()
     {
@@ -22,12 +29,18 @@ public class GameMgmt : MonoBehaviour {
 
     public void SaveGame()
     {
-        PlayerPrefs.SetFloat("CARBON", PlayerStatus.carbon);
+        PlayerPrefs.SetInt("LEVEL", status.Level);
+        PlayerPrefs.SetFloat("CARBON", status.Carbon);
         PlayerPrefs.SetFloat("MONEY", PlayerStatus.money);
-        PlayerPrefs.SetInt("PIKAS", PlayerStatus.pikas);
+        PlayerPrefs.SetInt("PIKAS", status.Pikas);
         PlayerPrefs.SetFloat("INCOME", PlayerStatus.income);
-        PlayerPrefs.SetInt("LEVEL", PlayerStatus.level);
-        PlayerPrefs.SetInt("UNLOCKPOINTS", PlayerStatus.unlockPoints);
+        PlayerPrefs.SetInt("UNLOCKPOINTS", status.UnlockPoints);
+        PlayerPrefs.SetFloat("CARBONX", PlayerStatus.carbonX);
+        PlayerPrefs.SetFloat("DURATIONX", PlayerStatus.durationX);
+        PlayerPrefs.SetFloat("PRICEX", PlayerStatus.priceX);
+        PlayerPrefs.SetFloat("INCOMEX", PlayerStatus.incomeX);
+
+        SaveUpgradeTree();
         SaveBuildings();
 
         Debug.Log("Game saved");
@@ -42,12 +55,18 @@ public class GameMgmt : MonoBehaviour {
 
     public static void LoadPreviousGame()
     {
+        status.Level = PlayerPrefs.GetInt("LEVEL");
         PlayerStatus.money = PlayerPrefs.GetFloat("MONEY");
         PlayerStatus.income = PlayerPrefs.GetFloat("INCOME");
-        PlayerStatus.carbon = PlayerPrefs.GetFloat("CARBON");
-        PlayerStatus.pikas = PlayerPrefs.GetInt("PIKAS");
-        PlayerStatus.level = PlayerPrefs.GetInt("LEVEL");
-        PlayerStatus.unlockPoints = PlayerPrefs.GetInt("UNLOCKPOINTS");
+        status.Carbon = PlayerPrefs.GetFloat("CARBON");
+        status.Pikas = PlayerPrefs.GetInt("PIKAS");
+        status.UnlockPoints = PlayerPrefs.GetInt("UNLOCKPOINTS");
+        PlayerStatus.carbonX = PlayerPrefs.GetFloat("CARBONX");
+        PlayerStatus.durationX = PlayerPrefs.GetFloat("DURATIONX");
+        PlayerStatus.priceX = PlayerPrefs.GetFloat("PRICEX");
+        PlayerStatus.incomeX = PlayerPrefs.GetFloat("INCOMEX");
+
+        LoadUpgradeTree();
         LoadBuildings();
 
         Debug.Log("Loaded previous game");
@@ -55,14 +74,46 @@ public class GameMgmt : MonoBehaviour {
 
     public static void StartNewGame()
     {
+        status.Level = initLevel;
         PlayerStatus.money = initMoney;
-        PlayerStatus.carbon = initCarbon;
+        status.Carbon = initCarbon;
         PlayerStatus.income = initIncome;
-        PlayerStatus.pikas = initPikas;
-        PlayerStatus.level = initLevel;
-        PlayerStatus.unlockPoints = initUnlockPoints;
+        status.Pikas = initPikas;
+        status.UnlockPoints = initUnlockPoints;
+        PlayerStatus.carbonX = 1;
+        PlayerStatus.durationX = 1;
+        PlayerStatus.priceX = 1;
+        PlayerStatus.incomeX = 1;
 
         Debug.Log("New game started");
+    }
+
+    public static void SaveUpgradeTree()
+    {
+        foreach (Upgrade curr in UpgradeDatabase.upgrades)
+            if (curr.unlocked)
+                PlayerPrefs.SetInt(curr.upgradeName, 1);
+        foreach (Upgrade curr in UpgradeDatabase.modifiers)
+            if (curr.unlocked)
+                PlayerPrefs.SetInt(curr.upgradeName, 1);
+    }
+
+    public static void LoadUpgradeTree()
+    {
+        foreach (Upgrade curr in UpgradeDatabase.upgrades)
+        {
+            if (PlayerPrefs.GetInt(curr.upgradeName) == 1)
+                curr.unlocked = true;
+            else
+                curr.unlocked = false;
+        }
+        foreach (Upgrade curr in UpgradeDatabase.modifiers)
+        {
+            if (PlayerPrefs.GetInt(curr.upgradeName) == 1)
+                curr.unlocked = true;
+            else
+                curr.unlocked = false;
+        }
     }
 
     public static void SaveBuildings()

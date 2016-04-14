@@ -1,4 +1,4 @@
 sceneSetups:
-- path: assets/Scenes/City.unity
+- path: assets/Scenes/City w UI Stretching.unity
   isLoaded: 1
   isActive: 1

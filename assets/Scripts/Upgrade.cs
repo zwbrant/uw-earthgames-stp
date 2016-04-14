@@ -32,7 +32,8 @@ public class Upgrade {
 		Tires,
 		Lightbulbs,
 		Trees,
-		Cars,
+		Vehicles,
+        Modifier,
 		Thermostats,
 		Diets,
 		Electricity,
@@ -44,7 +45,7 @@ public class Upgrade {
 		upgradeName = newName;
 		iD = newID;
 		description = newDescription;
-		icon = newIcon;
+		icon = Resources.Load<Sprite>(newName);
 		price = newPrice;
 		monthlyIncome = newMonthlyIncome;
 		carbonSavings = newCarbonSavings;

@@ -8,35 +8,35 @@ using System.Threading;
 
 public class BuildingMenu : MonoBehaviour {
 	public PlayerStatus player;
-    public VisualUpgrades visualUpgrades;
-	public int[] currUpgradeIds;
-    public int[] initialUpgradesIds;
+    public int[] currUpgradeIds;
+    int[] initialUpgradesIds;
 
-	public GameObject currMenu;
 	public Slider TimeMeter; 
-
 	public GameObject typeTextPrefab;
 	public GameObject upgradeMenuItemPrefab;
 	public GameObject menuPrefab; 
 	public GameObject popupPrefab;
     public GameObject solarPanelPrefab;
-    public List<GameObject> solarPanels = null;
+    internal List<GameObject> solarPanels;
     public string buildName;
 
-    public float initCarbon = 0;
-    public float initIncome = 0;
-    public float carbon = 0;
-	public float income = 0;
+    internal GameObject currMenu;
+    internal Vector3 mouseDownPos;
+    internal float initCarbon;
+    internal float initIncome;
+    internal float carbon = 0; //Current stats (savings) of this building
+	internal float income = 0;
 
     void Awake()
     {
         BuildingDatabase.buildings.Add(this);
+        solarPanels = new List<GameObject>();
     }
 
 
     void Start()
     {
-        AnalyzeBuild();
+        //AnalyzeBuild();
         initCarbon = carbon;
         initIncome = income;
     }
@@ -49,26 +49,66 @@ public class BuildingMenu : MonoBehaviour {
 			income += UpgradeDatabase.upgrades[currUpgradeIds[i]].monthlyIncome;
 		}
 
-        if (Array.IndexOf(currUpgradeIds, 10) != -1 || Array.IndexOf(currUpgradeIds, 11) != -1) {
+        //Adds or removes solar panels depending on upgrades
+        if (solarPanels.Count < 1 && (Contains(currUpgradeIds, 11) || Contains(currUpgradeIds, 10))) 
+        {
             AddSolarPanels();
-        } else if (solarPanels.Count > 0)
+        } else if (solarPanels.Count > 0 && !Contains(currUpgradeIds, 11) && !Contains(currUpgradeIds, 10))
         {
            GameObject.Destroy(solarPanels[0]);
            if (solarPanels.Count > 1)
                GameObject.Destroy(solarPanels[1]);
            solarPanels.Clear();
         }
+
+        UpdateMaterial();
+    }
+
+    bool Contains(int[] array, int value)
+    {
+        for (int i = 0; i < array.Length; i++)
+            if (array[i].Equals(value))
+                return true;
+        return false;
+    }
+
+    private void UpdateMaterial()
+    {
+        Material material = gameObject.GetComponent<Renderer>().material;
+
+        if (!material.name.Contains("Vehicle"))
+        {
+            if (CarbonImprovement() >= 1.0 && material.name.Contains("dirty"))
+            {
+                gameObject.GetComponent<Renderer>().material =
+                    Resources.Load<Material>("Materials/City/" + material.name.Substring(0, material.name.Length - 17));
+
+            }
+            else if (CarbonImprovement() <= 20.0 && !material.name.Contains("dirty"))
+            {
+                gameObject.GetComponent<Renderer>().material =
+                    Resources.Load<Material>("Materials/City/" + material.name.Substring(0, material.name.Length - 11) + "_dirty");
+            }
+        }
     }
 
     public double CarbonImprovement()
     {
+        if (initCarbon == 0)
+            return 0;
         return ((carbon - initCarbon) / carbon) * 100;
     }
 
-	public void OnMouseDown() {
-		if (!EventSystem.current.IsPointerOverGameObject ()) {
+    public void OnMouseDown()
+    {
+        mouseDownPos = Camera.main.transform.position;
+    }
 
-            Debug.Log("Carbon = " + carbon.ToString() + " Initial Carbon = " + initCarbon.ToString() + 
+	public void OnMouseUp() {
+		if (mouseDownPos == Camera.main.transform.position && !EventSystem.current.IsPointerOverGameObject())
+        {
+
+            Debug.Log(name + ": Carbon = " + carbon.ToString() + " Initial Carbon = " + initCarbon.ToString() + 
                 " Income = " + income.ToString() + " Initial Income = " + initIncome.ToString());
 			CreateSelectors();
             
@@ -81,34 +121,27 @@ public class BuildingMenu : MonoBehaviour {
 			Destroy(currMenu);
 		UpgradeDatabase.updateUnlocks ();
 		currMenu = (GameObject)Instantiate (menuPrefab);
-		currMenu.transform.SetParent (GameObject.Find ("HUDCanvas").transform);
-		currMenu.transform.localPosition = new Vector3 (0, 0, 0);
-        UpdateBuildStats();
+		currMenu.transform.SetParent (GameObject.Find ("UI").transform, false);
+		//currMenu.transform.localPosition = new Vector3 (0, 0, 0);
+        //UpdateBuildStats();
 
 		for (int i = 0; i < currUpgradeIds.Length; i++) {
 			GameObject currText = (GameObject)Instantiate(typeTextPrefab);
 			currText.GetComponent<Text>().text = "Upgrade" + " " + UpgradeDatabase.upgrades[currUpgradeIds[i]].upgradeType;
-			currText.transform.SetParent(currMenu.transform);
-			currText.transform.localPosition = new Vector3(-240, 190 - (100 * i), 0);
+			currText.transform.SetParent(currMenu.transform, false);
+			currText.transform.localPosition = new Vector3(-162, 180 - (112 * i), 0);
 			GameObject installedUpgrade = CreateUpgrade (currUpgradeIds[i]);
-			installedUpgrade.transform.SetParent (currMenu.transform);
-			installedUpgrade.transform.localPosition = new Vector3(-280, 140 - (100 * i),0);
+			installedUpgrade.transform.SetParent (currMenu.transform, false);
+			installedUpgrade.transform.localPosition = new Vector3(-215, 130 - (112 * i),0);
 			CreateSelector (currMenu, i);
 		}
 	}
 
-    public void UpdateBuildStats()
-    {
-        if (currMenu != null)
-            currMenu.transform.GetChild(2).transform.GetComponentInChildren<Text>().text = 
-                "Carbon Saved: " + (carbon - initCarbon) + "lbs\r\nMoney Saved: $" + (income - initIncome);
-    }
-
 	public void CreateSelector(GameObject menu, int selectorIndex){
-		List<Upgrade> subDB = UpgradeDatabase.upgrades.FindAll(item => 
-            item.upgradeType == UpgradeDatabase.upgrades[currUpgradeIds[selectorIndex]].upgradeType && 
-                item.levelRequired != 0 && item.iD != currUpgradeIds[selectorIndex]);   
-		
+        List<Upgrade> subDB = UpgradeDatabase.upgrades.FindAll(item =>
+            item.upgradeType == UpgradeDatabase.upgrades[currUpgradeIds[selectorIndex]].upgradeType &&
+                item.levelRequired != 0 && item.iD != currUpgradeIds[selectorIndex]);
+
 		for (int i = 0; i < subDB.Count; i++) {        //Populates menu
 			GameObject newMenuItem = CreateUpgrade(subDB[i].iD);
 			Image itemImage = newMenuItem.transform.GetChild (0).gameObject.GetComponent<Image> ();
@@ -123,8 +156,8 @@ public class BuildingMenu : MonoBehaviour {
 			Upgrade currUpgrade = subDB[i];
 			itemButton.onClick.AddListener(() => ConfirmPopup(currUpgrade, selectorIndex));
 
-			newMenuItem.transform.SetParent (menu.transform);
-			newMenuItem.transform.localPosition = new Vector3 (-205 + (75 * i), 140 - (100 * selectorIndex), 0); //Sets item spacing in menu
+			newMenuItem.transform.SetParent (menu.transform, false);
+			newMenuItem.transform.localPosition = new Vector3 (-125 + (90 * i), 130 - (112 * selectorIndex), 0); //Sets item spacing in menu
 		}
 
 	}
@@ -175,27 +208,42 @@ public class BuildingMenu : MonoBehaviour {
     public void ConfirmPopup(Upgrade upgrade, int selectorIndex) {
 		GameObject popup = (GameObject)Instantiate (popupPrefab);
 		Upgrade currUpgrade = UpgradeDatabase.upgrades [currUpgradeIds [selectorIndex]];
-		popup.transform.SetParent (currMenu.transform);
-		popup.transform.localPosition = new Vector3 (0, 0, 0);
+		popup.transform.SetParent (currMenu.transform, false);
+		//popup.transform.localPosition = new Vector3 (0, 0, 0);
 		Button buyButton = popup.transform.GetChild (0).gameObject.GetComponent<Button>();
-		Image icon = popup.transform.GetChild (1).gameObject.GetComponent<Image> ();
-		Text stats = popup.transform.GetChild (3).gameObject.GetComponent<Text>(); 
-		Text carbonComp = popup.transform.GetChild (4).gameObject.GetComponent<Text>(); 
-		Text incomeComp = popup.transform.GetChild (5).gameObject.GetComponent<Text>(); 
-		Text name = popup.transform.GetChild (7).gameObject.GetComponent<Text>(); 
+        Button closeButton = popup.transform.GetChild(8).gameObject.GetComponent<Button>();
+        Image icon = popup.transform.GetChild (1).gameObject.GetComponent<Image> ();
+		Text incomeStat = popup.transform.GetChild (2).gameObject.GetComponent<Text>();
+        Text carbStat = popup.transform.GetChild(3).gameObject.GetComponent<Text>();
+        Text durationStat = popup.transform.GetChild(4).gameObject.GetComponent<Text>();
+        Text pikaStat = popup.transform.GetChild(5).gameObject.GetComponent<Text>();
+        Text priceStat = popup.transform.GetChild(10).gameObject.GetComponent<Text>();
+        Text carbonComp = popup.transform.GetChild (6).gameObject.GetComponent<Text>(); 
+		Text incomeComp = popup.transform.GetChild (7).gameObject.GetComponent<Text>(); 
+		Text name = popup.transform.GetChild (9).gameObject.GetComponent<Text>(); 
 
 		name.text = upgrade.upgradeName;
 		float carbonDiff = upgrade.carbonSavings - currUpgrade.carbonSavings;
 		float incomeDiff = upgrade.monthlyIncome - currUpgrade.monthlyIncome;
 		icon.sprite = upgrade.icon;
-		stats.text = upgrade.carbonSavings + "lb / year\r\n" + "$" + upgrade.monthlyIncome + " / month\r\n" 
-			+ upgrade.duration + " sec\r\n" + "$" + upgrade.price;
-		carbonComp.text = (carbonDiff >= 0) ? "(+" + (carbonDiff) + ")" : "(" + (carbonDiff) + ")"; 
-		incomeComp.text = (incomeDiff >= 0) ? "(+" + (incomeDiff) + ")" : "(" + (incomeDiff) + ")"; 
-		carbonComp.color = (carbonDiff > 0) ? Color.green : Color.red;
-		incomeComp.color = (incomeDiff > 0) ? Color.green : Color.red;
+        carbStat.text = upgrade.carbonSavings + "lb";
+        incomeStat.text = "$" + upgrade.monthlyIncome;
+        durationStat.text = upgrade.duration + " sec";
+        priceStat.text = "$" + upgrade.price.ToString();
+        pikaStat.text = 1.ToString();
 
-		buyButton.onClick.AddListener(() => player.tryToBuy(upgrade.iD, this, (Slider) Instantiate(TimeMeter), selectorIndex));
+        //NEED PRICE
+
+        carbonComp.text = (carbonDiff >= 0) ? "(+" + (carbonDiff) + ")" : "(" + (carbonDiff) + ")"; 
+		incomeComp.text = (incomeDiff >= 0) ? "(+" + (incomeDiff) + ")" : "(" + (incomeDiff) + ")";
+
+        Color red = new Color(0.89f, .37f, .37f);
+        Color green = new Color(.61f, .79f, .31f);
+        carbonComp.color = (carbonDiff > 0) ? green : red;
+		incomeComp.color = (incomeDiff > 0) ? green : red;
+
+        buyButton.onClick.AddListener(() => player.tryToBuy(upgrade.iD, this, (Slider) Instantiate(TimeMeter), selectorIndex));
         buyButton.onClick.AddListener(() => GameObject.Destroy(popup));
+        closeButton.onClick.AddListener(() => GameObject.Destroy(popup));
     }
 }

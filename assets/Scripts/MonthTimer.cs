@@ -9,10 +9,26 @@ public class MonthTimer : MonoBehaviour {
 	public Slider timeMeter; //UI timer meter
 	private static int monthIndex;
 	private static int year = 2034;
-	private string[] month = new string[] {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
+
 	public static float incomeDue; 
 	public float monthLength; 
-	public Dictionary<string, MonthData> history = new Dictionary<string, MonthData>(); 
+	public Dictionary<string, MonthData> history = new Dictionary<string, MonthData>();
+
+    private string[] months = new string[] {
+        "January", "February", "March", "April",
+        "May", "June", "July", "August", "September",
+        "October", "November", "December"
+    };
+    public Dictionary<string, int> monthLengths = new Dictionary<string, int> {
+        { "Jan", 31 },{ "Feb", 29 },{ "Mar", 31 },{ "Apr", 30 },{ "May", 31 },
+        { "Jun", 30 },{ "Jul", 31 },{ "Aug", 31 },{ "Sep", 30 },
+        { "Oct", 31 },{ "Nov", 30 },{ "Dec", 31 },
+    };
+    public float dayLength = 1;
+    public int currDay = 1;
+    public int currMonth = 1;
+    public float dayTimer; 
 
 	public GameObject progReport;
 	public GameObject Month;
@@ -25,7 +41,7 @@ public class MonthTimer : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		if (timer == monthLength) {
-			Month.GetComponent<Text>().text = month[monthIndex] + " " + year;
+			Month.GetComponent<Text>().text = months[monthIndex] + " " + year;
 		}
 
 		if(timer > 0){
@@ -36,7 +52,7 @@ public class MonthTimer : MonoBehaviour {
 		}
 		else {
 			MonthData curr = new MonthData(PlayerStatus.carbonSaved, PlayerStatus.incomeAdded, PlayerStatus.moneySpent);
-			history.Add(month[monthIndex] + year.ToString(), curr); 
+			history.Add(months[monthIndex] + year.ToString(), curr); 
 			ProduceReport();
 			PlayerStatus.incomeAdded = 0;
 			PlayerStatus.carbonSaved = 0;
@@ -58,15 +74,15 @@ public class MonthTimer : MonoBehaviour {
 
 	public void ProduceReport() {
 		GameObject report = (GameObject)Instantiate (progReport);
-		report.transform.SetParent(GameObject.Find("HUDCanvas").transform);
+		report.transform.SetParent(GameObject.Find("UI").transform);
 		report.GetComponent<RectTransform>().localPosition = new Vector3(0.0f, 0.0f, 0.0f);
 		Text carbonText = report.transform.GetChild(2).transform.GetChild(0).transform.GetChild(0).GetComponent<Text>();
 		Text incomeText = report.transform.GetChild(3).transform.GetChild(0).transform.GetChild(0).GetComponent<Text>();
 
 		int i = 0;
 		foreach(KeyValuePair<string, MonthData> pair in history) {
-			carbonText.text += month[i] + " " + year.ToString() + ": " + pair.Value.carbonSaved + "lbs of C02 Saved\r\n";
-			incomeText.text += month[i] + " " + year.ToString() + ": $" + pair.Value.incomeAdded + " added to income\r\n";
+			carbonText.text += months[i] + " " + year.ToString() + ": " + pair.Value.carbonSaved + "lbs of C02 Saved\r\n";
+			incomeText.text += months[i] + " " + year.ToString() + ": $" + pair.Value.incomeAdded + " added to income\r\n";
 			i++;
 		}
 	

@@ -32,7 +32,7 @@ public class UpgradeMenu : MonoBehaviour {
 		List<Upgrade> subDB = UpgradeDatabase.upgrades.FindAll(item => item.upgradeType == upgradeType && item.levelRequired != 0); 
 		GameObject newMenu = (GameObject)Instantiate (menuPrefab);
 		RectTransform menuRect = newMenu.GetComponent<RectTransform> ();
-		newMenu.transform.SetParent (GameObject.Find("HUDCanvas").transform);
+		newMenu.transform.SetParent (GameObject.Find("UI").transform);
 		int menuHeight = subDB.Count * (105) + 15;
 		menuRect.localPosition = new Vector3 (150, (menuHeight / 2) + 10, 0);
 		menuRect.sizeDelta = new Vector2(ITEM_WIDTH + 10, menuHeight); 

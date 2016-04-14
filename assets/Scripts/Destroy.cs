@@ -14,6 +14,7 @@ public class Destroy : MonoBehaviour {
 	}
 
 	public void DestroyMenu(){
+        CameraDragMove.inMenu = false;
 		Destroy (this.gameObject);
 	}
 }

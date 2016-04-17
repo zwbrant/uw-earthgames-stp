@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 2eb695ba591c70947a3359986c5d65ea
+timeCreated: 1431378968
+licenseType: Free
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - upgradeTreePanel: {fileID: 121040, guid: de6f89a5e43076540a4063803db7c778, type: 2}
+  - upgradeItem: {fileID: 199426, guid: f2235fd3622d7ce4c84cbbb59543f7a2, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

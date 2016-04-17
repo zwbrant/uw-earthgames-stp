@@ -1,0 +1,20 @@
+fileFormatVersion: 2
+guid: 086e7292d4821934fba4cb7fd8c67b3c
+timeCreated: 1459810677
+licenseType: Free
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences:
+  - player: {instanceID: 0}
+  - TimeMeter: {instanceID: 0}
+  - typeTextPrefab: {fileID: 199240, guid: c2728c4cbbc8dbf4aa54dcce5094c549, type: 2}
+  - upgradeMenuItemPrefab: {fileID: 199426, guid: f2235fd3622d7ce4c84cbbb59543f7a2,
+      type: 2}
+  - menuPrefab: {fileID: 187320, guid: 506f5bae0387676498e68d1fe70dc025, type: 2}
+  - popupPrefab: {fileID: 131416, guid: 21e82dd90adbc5c45b9f412c45a7b712, type: 2}
+  - solarPanelPrefab: {fileID: 143408, guid: b6765e40a8e1c8b44ab6c123723e7c6c, type: 2}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

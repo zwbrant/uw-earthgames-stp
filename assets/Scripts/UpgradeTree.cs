@@ -19,9 +19,9 @@ public class UpgradeTree : MonoBehaviour {
 
 
 
-    private Vector3 leftSpacing = new Vector3 (190, -50, 0);
-	private Vector3 midSpacing = new Vector3 (180, 0, 0);
-	private Vector3 rightSpacing = new Vector3 (190, 50, 0);
+    private Vector3 leftSpacing = new Vector3 (327, -65, 0);
+	private Vector3 midSpacing = new Vector3 (327, 0, 0);
+	private Vector3 rightSpacing = new Vector3 (327, 65, 0);
 
 	// Use this for initialization
 	void Start () {
@@ -33,10 +33,11 @@ public class UpgradeTree : MonoBehaviour {
 
     public void OpenUpgradeTree()
     {
+        GameMgmt.status.PauseGame(true, true);
         SetOrder();
 
         currMenu = (GameObject)Instantiate(upgradeTreePanel);
-        currMenu.transform.SetParent(GameObject.Find("UI").transform);
+        currMenu.transform.SetParent(GameObject.Find("UI").transform, false);
         currMenu.transform.localPosition = new Vector3(0, 0, 0);
 
         pointsText = currMenu.transform.GetChild(1).gameObject.GetComponent<Text>();
@@ -50,7 +51,7 @@ public class UpgradeTree : MonoBehaviour {
 
         GameObject newMenuItem = BuildItem(upgradeDB[2]);
         newMenuItem.transform.SetParent(currMenu.transform.GetChild(2).GetChild(0).GetChild(0).transform);
-        newMenuItem.transform.localPosition = new Vector3(-275, -20, 0);
+        newMenuItem.transform.localPosition = new Vector3(-185, -20, 0);
 
         BuildTree(newMenuItem, currMenu, upgradeDB[2]);
     }
@@ -141,11 +142,12 @@ public class UpgradeTree : MonoBehaviour {
 		buttons.onClick.AddListener(() => ConfirmPopup(upgrade, newMenuItem));
 		itemIcon.sprite = upgrade.icon;
 		Destroy (newMenuItem.GetComponent<Image> ());
-		if (!upgrade.unlocked) {
-			itemBg.sprite = Resources.Load<Sprite>("lockedIcon");
-		} 
+		if (upgrade.unlocked) {
+			itemBg.sprite = Resources.Load<Sprite>("Menu Elements/unlockedIcon");
+            Destroy(newMenuItem.transform.GetChild(2).gameObject);
+        }
 
-		return newMenuItem;
+        return newMenuItem;
 	}
 
 	public void ConfirmPopup(Upgrade upgrade, GameObject currItem) {

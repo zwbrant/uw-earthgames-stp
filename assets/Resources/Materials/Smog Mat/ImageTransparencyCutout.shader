@@ -1,4 +1,4 @@
-﻿Shader "Custom/CutoutMobHLSL" {
+﻿Shader "Custom/ImageTransparencyCutout" {
 	Properties{
 		_Color("Main Color", Color) = (1,1,1,1)
 		_MainTex("Base (RGB) Trans (A)", 2D) = "white" {}
@@ -31,6 +31,7 @@
 		vertexOutput output;
 
 		output.tex = input.texcoord;
+
 		output.pos = mul(UNITY_MATRIX_MVP, input.vertex);
 		return output;
 	}

@@ -7,11 +7,11 @@ public class GameMgmt : MonoBehaviour {
 
     //New game starting stats
     public const float initCarbon = 0;
-    public const float initMoney = 50000;
+    public const float initMoney = 100000;
     public const float initIncome = 0;
-    public const int initPikas = 3;
-    public const int initLevel = 6;
-    public const int initUnlockPoints = 4;
+    public const int initPikas = 2;
+    public const int initLevel = 1;
+    public const int initUnlockPoints = 1;
 
 
     void Awake ()

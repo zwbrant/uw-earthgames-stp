@@ -31,36 +31,40 @@ public class SpinTween : MonoBehaviour {
     }
     void Update()
     {
-        timeAlive += Time.deltaTime;
-
-        if (System.Math.Abs((decimal)rBody.velocity.y) > 10.0m)
-            rBody.AddRelativeTorque(Vector3.down * spinSpeed, ForceMode.Impulse);
-
-        if (timeAlive < accelDuration)
+        if (!PlayerStatus.paused)
         {
+            timeAlive += Time.deltaTime;
+
+            if (System.Math.Abs((decimal)rBody.velocity.y) > 10.0m)
+                rBody.AddRelativeTorque(Vector3.down * spinSpeed, ForceMode.Impulse);
+
+            if (timeAlive < accelDuration)
+            {
 
 
+
+                rBody.AddForce(direction * moveSpeed * Time.deltaTime);
+
+                /*
+                float downwardForce = (gravity * (timeAlive - gravityOffset)) * Time.deltaTime;
+                direction.y -= downwardForce;
             
-            rBody.AddForce(direction * moveSpeed * Time.deltaTime);
+                transform.Rotate(Vector3.up, spinSpeed * Time.deltaTime * 20);
+                if (downwardForce < 0)
+                    transform.Translate(direction * moveSpeed * Time.deltaTime, Space.World);
+                    */
 
-            /*
-            float downwardForce = (gravity * (timeAlive - gravityOffset)) * Time.deltaTime;
-            direction.y -= downwardForce;
-            
-            transform.Rotate(Vector3.up, spinSpeed * Time.deltaTime * 20);
-            if (downwardForce < 0)
-                transform.Translate(direction * moveSpeed * Time.deltaTime, Space.World);
-                */
-
-        } else if (timeAlive > 4f)
-        {
-            Disintergrate();
+            }
+            else if (timeAlive > 4f)
+            {
+                Disintergrate();
+            }
+            else
+            {
+                rBody.AddForce(Vector3.down * velocityMult * Time.deltaTime);
+                //Destroy(this.gameObject);
+            }
         }
-        else {
-            rBody.AddForce(Vector3.down * velocityMult * Time.deltaTime);
-            //Destroy(this.gameObject);
-        }
-        
     }
 
     void Disintergrate()

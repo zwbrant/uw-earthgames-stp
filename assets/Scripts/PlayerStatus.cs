@@ -5,6 +5,7 @@ using UnityEngine.UI;
 public class PlayerStatus : MonoBehaviour {
     public static GameObject uI;
 	public static List<Upgrade> upgradeDB = UpgradeDatabase.upgrades;
+    public static StatsAndTriggers statsAndTriggers;
     private const float TimerSpeed = 5.0f;
 	public static float money; //Current player money
 	public static float carbon; //Current player carbon savings
@@ -62,7 +63,7 @@ public class PlayerStatus : MonoBehaviour {
                     GameObject newPika = Instantiate(pika);
                     newPika.transform.SetParent(pikaContainer.transform, false);
                     newPika.transform.localScale = new Vector3(2.8f, 2.8f, 2.8f);
-                    newPika.transform.localPosition = new Vector3((startCount * 155 + (155 * i)) + -65, -134, 0);
+                    newPika.transform.localPosition = new Vector3((startCount * 155 + (155 * i)) + -65, -31.5f, 0);
                 }
                 
             } else
@@ -89,7 +90,7 @@ public class PlayerStatus : MonoBehaviour {
                 LevelPlayer();
             if (xPSlider.maxValue != UpgradeDatabase.levels[level])
                 xPSlider.maxValue = UpgradeDatabase.levels[level];
-
+            SmogBehavior.SetCutoff();
             
             xPSlider.value = value;
         }
@@ -101,9 +102,8 @@ public class PlayerStatus : MonoBehaviour {
         set
         {
             unlockPoints = value;
-            Debug.Log("Unlock Pts: " + value);
 
-            researchArea.transform.GetChild(3).gameObject.GetComponent<Image>().sprite = (unlockPoints == 0) 
+            researchArea.transform.GetChild(4).gameObject.GetComponent<Image>().sprite = (unlockPoints == 0) 
                 ? Resources.Load<Sprite>("New UI/Research Icon") : Resources.Load<Sprite>("New UI/Research Plus Icon");
         }
     }
@@ -117,12 +117,11 @@ public class PlayerStatus : MonoBehaviour {
         set
         {
             level = value;
-            researchArea.transform.GetChild(4).gameObject.GetComponent<Text>().text = "lvl " + Level;
+            researchArea.transform.GetChild(3).gameObject.GetComponent<Text>().text = "lvl " + Level;
             Carbon = Carbon;
         }
     }
 
-	// Use this for initialization
 	void Awake () {
         uI = GameObject.Find("UI");
         UpgradeDatabase.MakeUpgradeDB();
@@ -130,6 +129,8 @@ public class PlayerStatus : MonoBehaviour {
         manager = GameObject.Find("Manager");
         xPSlider = researchArea.transform.GetChild(1).gameObject.GetComponent<Slider>();
         xPSlider.value = 0;
+        statsAndTriggers = GameObject.Find("MessageSequenceManager").GetComponent<StatsAndTriggers>();
+        SetPauseButSprites();
     }
 
 	void Start () {
@@ -142,14 +143,13 @@ public class PlayerStatus : MonoBehaviour {
 		} else {
             //Used to start new game
             GameMgmt.StartNewGame();
-		} 
+		}
+
+        statsAndTriggers.CheckDialogueEvents();
 	}
 
-	// Update is called once per frame
 	void Update () {
 
-        if (monthTimer.timeMeter.value <= 0) 
-			money += income;
 
 		if (!paused) {
            // townSmog.transform.Translate(Vector3.right * 10 * Time.deltaTime);
@@ -157,22 +157,22 @@ public class PlayerStatus : MonoBehaviour {
             for (int i = taskMeters.Count - 1; i >= 0; i--) {	                    //Advances all of the active upgrade task meters.					
 				if (taskMeters [i].value <= 0) {
                     BuildingMenu building = buildings[i];
-					GetComponent<AudioSource> ().PlayOneShot (Resources.Load<AudioClip> ("Audio/pika hooray"));
+					GetComponent<AudioSource>().PlayOneShot (Resources.Load<AudioClip> ("Audio/pika hooray"));
                     Pikas++;
 
                     float newIncome = upgradeDB[meterUpgradeIDs[i]].monthlyIncome * incomeX - upgradeDB[oldUpgradeIds[i]].monthlyIncome * incomeX;
+                    float newCarbon = upgradeDB[meterUpgradeIDs[i]].carbonSavings * carbonX - upgradeDB[oldUpgradeIds[i]].carbonSavings * carbonX;
 
-                    Carbon += upgradeDB [meterUpgradeIDs [i]].carbonSavings * carbonX - upgradeDB [oldUpgradeIds [i]].carbonSavings * carbonX;
+                    Carbon += newCarbon;
                     income += newIncome;
-					carbonSaved += upgradeDB [meterUpgradeIDs [i]].carbonSavings * carbonX - upgradeDB [oldUpgradeIds [i]].carbonSavings * carbonX;
-					incomeAdded += upgradeDB [meterUpgradeIDs [i]].monthlyIncome * incomeX - upgradeDB [oldUpgradeIds [i]].monthlyIncome * incomeX;
+                    carbonSaved += newCarbon;
+                    incomeAdded += newIncome;
 
                     building.AnalyzeBuild();
 
                     if (building.currMenu != null)
                         building.CreateSelectors();
 
-                    Vector3 rewardEffectPosition = building.transform.position;
                     UIEffects.MoneyReward(building.gameObject, newIncome);
 
                     DestroyObject(taskMeters[i].gameObject);
@@ -180,18 +180,19 @@ public class PlayerStatus : MonoBehaviour {
 					CameraDragMove.taskMeterOrigins.RemoveAt (i);
 					taskMeters.RemoveAt (i);
 					meterUpgradeIDs.RemoveAt (i);
+                    oldUpgradeIds.RemoveAt(i);
 					buildings.RemoveAt(i);
-                    //UpdateSmog();
+                    statsAndTriggers.CheckDialogueEvents();
 				} else {
 					taskMeters [i].value -= Time.deltaTime * TimerSpeed;
 				}
 
-                if (monthTimer.timeMeter.value <= 0) 
-                    PauseGame();
+                //if (monthTimer.timeMeter.value <= 0) 
+                    //PauseGame();
             }
 
-            if (monthTimer.timeMeter.value <= 0)
-                PauseGame();
+            //if (monthTimer.timeMeter.value <= 0)
+            //    PauseGame(true, true);
         }
         UpdateUIStats();
 	}
@@ -230,9 +231,9 @@ public class PlayerStatus : MonoBehaviour {
 			GetComponent<AudioSource>().PlayOneShot(Resources.Load<AudioClip>("Audio/pika no"));
 			return false;
 		} else {
-
-			GetComponent<AudioSource>().PlayOneShot(Resources.Load<AudioClip>("Audio/pika yes"));
-
+            oldUpgradeIds.Add(building.currUpgradeIds[selectorIndex]);
+            GetComponent<AudioSource>().PlayOneShot(Resources.Load<AudioClip>("Audio/pika yes"));
+            //meter.transform.SetParent(uI.transform, false);
 			money -= upgradeDB[upgradeId].price * priceX;
 			building.income += upgradeDB[upgradeId].monthlyIncome;
 			building.carbon += upgradeDB[upgradeId].carbonSavings;
@@ -243,7 +244,8 @@ public class PlayerStatus : MonoBehaviour {
 			createTaskMeter((upgradeDB[upgradeId].duration * durationX), upgradeId, building.currUpgradeIds[selectorIndex], building.gameObject);
 
 			building.currUpgradeIds[selectorIndex] = upgradeId;   //Updates Building Menu with new upgrade
-			
+            UpdateUIStats();
+            building.CreateSelectors();
 			return true;
 		}
 	}
@@ -260,12 +262,23 @@ public class PlayerStatus : MonoBehaviour {
             GameObject msg = (GameObject)Instantiate(levelPopup);
             msg.transform.SetParent(GameObject.Find("UI").transform, false);
             //msg.GetComponent<RectTransform>().localPosition = new Vector3(500.0f, -133.0f, 0.0f);
+            string msgText = "";
             string unlocks = "Technologies Unlocked:";
             foreach (Upgrade upgrd in upgradeDB)
+            {
                 if (upgrd.levelRequired == level)
-                    unlocks += "\r\n" + upgrd.upgradeName;
+                {
+                    msgText = unlocks;
                     
-            msg.transform.GetChild(1).GetComponent<Text>().text = unlocks;
+                    msgText += "\r\n" + upgrd.upgradeName;
+                    Debug.Log(msgText);
+                }
+            }
+
+            if (!msgText.Contains("Technologies"))
+                msgText = "Check the Research Tree for new upgrades!";
+
+            msg.transform.GetChild(1).GetComponent<Text>().text = msgText;
 
         }
 	}
@@ -278,6 +291,7 @@ public class PlayerStatus : MonoBehaviour {
 		newMeter.transform.SetParent (GameObject.Find ("UI").transform);
         newMeter.transform.SetAsFirstSibling();
         Vector3 buildPos = GameObject.Find ("Main Camera").GetComponent<Camera>().WorldToScreenPoint(building.transform.position);
+        buildPos.z = 100f;
 		newMeter.transform.position = buildPos + new Vector3(0, 20 * taskMeters.Count, 0);
 		CameraDragMove.taskMeterOrigins.Add(Camera.main.ScreenToWorldPoint (newMeter.transform.position));
 		RectTransform sliderRect = newMeter.GetComponent<RectTransform> ();
@@ -286,27 +300,38 @@ public class PlayerStatus : MonoBehaviour {
 
 		taskMeters.Add (newMeter);
 		meterUpgradeIDs.Add (upgradeId);
-		oldUpgradeIds.Add (oldUpgradeId);
+		
 
 	}
 
-	public void PauseGame() {
-		paused = !paused;
-        pauseButton.GetComponent<Image>().sprite = (paused) ? Resources.Load<Sprite>("New UI/Play Light") :
-            Resources.Load<Sprite>("New UI/Pause Light");
+    Sprite playLight, pauseLight, playDark, pauseDark, disabledPauseBut;
+    internal void SetPauseButSprites()
+    {
+        playLight = Resources.Load<Sprite>("New UI/Play Light");
+        pauseLight = Resources.Load<Sprite>("New UI/Pause Light");
+        playDark = Resources.Load<Sprite>("New UI/Play Dark");
+        pauseDark = Resources.Load<Sprite>("New UI/Pause Dark");
+        disabledPauseBut = Resources.Load<Sprite>("New UI/Pause Disabled");
+    }
+    public static bool wasMenuPaused = false;
+	public void PauseGame(bool pause, bool menuPause) {
+		paused = pause;
+        wasMenuPaused = menuPause;
+        pauseButton.GetComponent<Image>().sprite = (paused) ? playLight : pauseLight;
 
         SpriteState st = new SpriteState();
-        st.pressedSprite = (paused) ? Resources.Load<Sprite>("New UI/Play Dark") :
-            Resources.Load<Sprite>("New UI/Pause Dark");
-
-
-
-
+        st.pressedSprite = (paused) ? playDark : pauseDark;
+        st.disabledSprite = disabledPauseBut;
         pauseButton.GetComponent<Button>().spriteState = st;
-        Camera.main.GetComponent<AudioSource>().volume = (paused) ? 0.05f : 0.3f;
+        Camera.main.GetComponent<AudioSource>().volume = (paused) ? 0.2f : 0.8f;
 		RotateSun.pause = !RotateSun.pause;
 		MonthTimer.pause = !MonthTimer.pause;
 	}
+
+    public void TogglePause()
+    {
+        PauseGame(!paused, false);
+    }
 
     /*
     private void UpdateSmog()

@@ -40,6 +40,7 @@ public class Upgrade {
 		All 
 	}
 
+    //For normal, building/vehicle upgrades
 	public Upgrade(string newName,int newID, string newDescription, Sprite newIcon, float newPrice, 
 	               float newMonthlyIncome, float newCarbonSavings, UpgradeType newUpgradeType, float newDuration, int newLevelRequired){
 		upgradeName = newName;
@@ -53,13 +54,29 @@ public class Upgrade {
 		duration = newDuration;
 		levelRequired = newLevelRequired;
 		unlocked = false;
-	}
+
+        if (!UpgradeDatabase.bestCarbUpgrds.ContainsKey(newUpgradeType) || !UpgradeDatabase.bestIncomeUpgrds.ContainsKey(newUpgradeType))
+        {
+            UpgradeDatabase.bestCarbUpgrds.Add(newUpgradeType, this);
+            UpgradeDatabase.bestIncomeUpgrds.Add(newUpgradeType, this);
+
+        }
+        else if (UpgradeDatabase.bestCarbUpgrds[newUpgradeType].carbonSavings < newCarbonSavings) //New upgrade has better carbon savings
+        {
+            UpgradeDatabase.bestCarbUpgrds[newUpgradeType] = this;
+        }
+        else if (UpgradeDatabase.bestCarbUpgrds[newUpgradeType].monthlyIncome < newMonthlyIncome) //New upgrade has better monthly income
+        {
+            UpgradeDatabase.bestIncomeUpgrds[newUpgradeType] = this;
+        }
+    }
 	
 	public bool isUnlocked() {
         Debug.Log("Checking... " + upgradeName);
 		return (levelRequired <= PlayerStatus.level);
 	}
 
+    //For multiplier/bonus upgrades
 	public Upgrade(string newName, int newID, string newDescription, Sprite newIcon, float newPriceX, float newIncomeX, float newCarbonX, float newDurationX, UpgradeType newUpgradeType) {
 		upgradeName = newName;
 		iD = newID;

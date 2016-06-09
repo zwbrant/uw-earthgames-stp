@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class CameraDragMove : MonoBehaviour {
 	private Vector3 resetCamera;
@@ -17,13 +18,25 @@ public class CameraDragMove : MonoBehaviour {
 	private bool drag = false;
     public static bool inMenu = false;
 
+    public Text testText;
+
 	void Start () {
 		resetCamera = Camera.main.transform.position;
         cameraDistance = this.gameObject.GetComponent<Camera>().orthographicSize;
     }
 
 
-    void Update() { 
+    void Update() {
+        if (Input.touchCount >= 2)
+        {
+            Vector2 touch0, touch1;
+            touch0 = Input.GetTouch(0).position;
+            touch1 = Input.GetTouch(1).position;
+            cameraDistance = Vector2.Distance(touch0, touch1) * .1f;
+            testText.text = cameraDistance.ToString();
+        }
+
+        
         cameraDistance -= Input.GetAxis("Mouse ScrollWheel") * scrollSpeed;
         cameraDistance = Mathf.Clamp(cameraDistance, cameraDistanceMin, cameraDistanceMax);
 

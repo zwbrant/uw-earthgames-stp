@@ -25,7 +25,10 @@ public class UIEffects : MonoBehaviour {
 
     public static void MoneyReward(GameObject building, float income)
     {
+
         int coinCount = ((int)income / 2);
+        if (coinCount < 1 && income > 0)
+            coinCount = 1;
 
         Vector3 position = building.transform.position;
 
